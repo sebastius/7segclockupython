@@ -1,4 +1,5 @@
-# untested
+# mildly testes
+
 import time
 from neopixel import Neopixel
 import random
@@ -7,6 +8,8 @@ import ntptime
 
 
 timezone_offset = 1* 3600
+last_called=0
+interval=3600
 
 numpix = 14  # Number of NeoPixels
 # Pin where NeoPixels are connected
@@ -15,11 +18,12 @@ strip1 = Neopixel(numpix, 1, 1, "GRB")
 strip2 = Neopixel(numpix, 2, 2, "GRB")
 strip3 = Neopixel(numpix, 3, 3, "GRB")
 
+digitcolor = (128, 0, 0)
 # Wi-Fi credentials
-SSID = "revspace-pub"
+SSID = ""
 PASSWORD = ""
 
-oldseconds=99
+oldminutes=99
 
 strip0.fill((0,0,0))
 strip1.fill((0,0,0))
@@ -64,8 +68,8 @@ print(digits[7])
 def cijfer(positie, getal):
     for i in range(7):
         if (digits[getal][i]):
-            strips[positie].set_pixel(digitmap[i*2], (255, 0, 0))
-            strips[positie].set_pixel(digitmap[(i*2)+1], (255, 0, 0))
+            strips[positie].set_pixel(digitmap[i*2], digitcolor)
+            strips[positie].set_pixel(digitmap[(i*2)+1], digitcolor)
         else:
             strips[positie].set_pixel(digitmap[i*2], (0, 0, 0))
             strips[positie].set_pixel(digitmap[(i*2)+1], (0, 0, 0))
@@ -124,22 +128,18 @@ def get_local_time():
 
 
 def clock():
+    global oldminutes
     current_time = get_local_time()  # Get the local time
-    if current_time[5]!=oldseconds:
-        oldseconds=current_time[5]
+    if current_time[4]!=oldminutes:
+        oldminutes=current_time[4]
         updateclock(current_time[3],current_time[4])
-    
-        formatted_time = "{:02d} {} {:02d}{}{:02d}:{:02d}".format(
-        current_time[2], months[current_time[1]-1], 
-        current_time[3], separator, current_time[4], current_time[5]
-        )
-        print(formatted_time,0)
+        print(current_time)
 
 def updateclock(uren, minuten):
-    cijfer(0,uren//10)
-    cijfer(1,uren%10)
-    cijfer(2,minuten//10)
-    cijfer(3,minuten%10)
+    #cijfer(0,uren//10)
+    #cijfer(1,uren%10)
+    cijfer(0,minuten//10)
+    cijfer(1,minuten%10)
     
 def ntp_sync():
     ntptime.settime()  # This will set the time on the Pico W
@@ -163,7 +163,3 @@ while 1:
     check_and_run()
     clock()
     time.sleep_us(100000)
-
-
-
-
