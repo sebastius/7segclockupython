@@ -5,7 +5,7 @@ from neopixel import Neopixel
 import random
 import network
 import ntptime
-
+import machine
 
 timezone_offset = 1* 3600
 last_called=0
@@ -17,25 +17,25 @@ strip0 = Neopixel(numpix, 0, 0, "GRB")
 strip1 = Neopixel(numpix, 1, 1, "GRB")
 strip2 = Neopixel(numpix, 2, 2, "GRB")
 strip3 = Neopixel(numpix, 3, 3, "GRB")
+strips = [strip0, strip1, strip2, strip3]
 
-digitcolor = (0, 0, 255)
+digitcolor = (255, 0, 255)
 # Wi-Fi credentials
-SSID = ""
+SSID = "revspace-pub"
 PASSWORD = ""
 
 oldminutes=99
 
-strip0.fill((0,0,0))
-strip1.fill((0,0,0))
-strip2.fill((0,0,0))
-strip3.fill((0,0,0))
+def everythingoff():
+    strip0.fill((0,0,0))
+    strip1.fill((0,0,0))
+    strip2.fill((0,0,0))
+    strip3.fill((0,0,0))
 
-strip0.show()
-strip1.show()
-strip2.show()
-strip3.show()
-
-strips = [strip0, strip1, strip2, strip3]
+    strip0.show()
+    strip1.show()
+    strip2.show()
+    strip3.show()
 
 
 #    0
@@ -62,9 +62,6 @@ digits = [
 
 digitmap = [2, 3, 4, 5, 13, 12, 11, 10, 9, 8, 0, 1, 7, 6]
 
-print(digits[7])
-
-
 def cijfer(positie, getal):
     getal=getal%10
     for i in range(7):
@@ -79,12 +76,22 @@ def cijfer(positie, getal):
 
 def connect_to_wifi():
     wlan = network.WLAN(network.STA_IF)
+    wlan.active(False)
     wlan.active(True)
     wlan.connect(SSID, PASSWORD)
-
+    tries=0
     while not wlan.isconnected():
-        print("Connecting...")
+        strip0.fill((0,0,0))
+        strip0.set_pixel(tries%numpix, digitcolor)
+        strip0.show()
+        cijfer(2, tries//10)
+        cijfer(3, tries%10)
+        print("Connecting to wifi...")
+        tries=tries+1
         time.sleep(1)
+        if tries>24:
+            machine.reset()
+        
     print("Connected!")
 
 def is_dst_europe(year, month, day, hour):
@@ -143,8 +150,31 @@ def updateclock(uren, minuten):
     cijfer(3,minuten%10)
     
 def ntp_sync():
-    ntptime.settime()  # This will set the time on the Pico W
+    ntpsync=0
+    tries=0
+    everythingoff()
+    while not ntpsync:
+        try:
+            ntptime.settime()  # This will set the time on the Pico W
+        except Exception as e:
 
+            print(f"An error occurred: {e}")
+            wlan = network.WLAN(network.STA_IF)
+            if wlan.isconnected():
+                print("WLAN is connected")
+                strip1.fill((0,0,0))
+                strip1.set_pixel(tries%numpix, digitcolor)
+                strip1.show()
+                cijfer(2, tries//10)
+                cijfer(3, tries%10)
+                print("trying NTP sync...")
+                tries=tries+1
+                time.sleep(1)
+                if tries>8:
+                    machine.reset()
+            else:
+                connect_to_wifi()
+        ntpsync=1
 
 def check_and_run():
     global last_called
@@ -155,8 +185,8 @@ def check_and_run():
         ntp_sync()          # Call the function
         last_called = current_time  # Update last called time
 
-
 print('hello')
+everythingoff()
 connect_to_wifi()
 print('wifi')
 
