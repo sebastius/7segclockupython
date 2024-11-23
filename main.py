@@ -1,4 +1,4 @@
-# mildly testes
+# mildly tested
 
 import time
 from neopixel import Neopixel
@@ -18,7 +18,7 @@ strip1 = Neopixel(numpix, 1, 1, "GRB")
 strip2 = Neopixel(numpix, 2, 2, "GRB")
 strip3 = Neopixel(numpix, 3, 3, "GRB")
 
-digitcolor = (128, 0, 0)
+digitcolor = (0, 0, 255)
 # Wi-Fi credentials
 SSID = ""
 PASSWORD = ""
@@ -66,6 +66,7 @@ print(digits[7])
 
 
 def cijfer(positie, getal):
+    getal=getal%10
     for i in range(7):
         if (digits[getal][i]):
             strips[positie].set_pixel(digitmap[i*2], digitcolor)
@@ -136,10 +137,10 @@ def clock():
         print(current_time)
 
 def updateclock(uren, minuten):
-    #cijfer(0,uren//10)
-    #cijfer(1,uren%10)
-    cijfer(0,minuten//10)
-    cijfer(1,minuten%10)
+    cijfer(0,uren//10)
+    cijfer(1,uren%10)
+    cijfer(2,minuten//10)
+    cijfer(3,minuten%10)
     
 def ntp_sync():
     ntptime.settime()  # This will set the time on the Pico W
